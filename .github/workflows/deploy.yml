@@ -1,0 +1,66 @@
+name: Deploy Alexa Gemini Skill
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build Docker image
+        run: |
+          docker build -t alexa-gemini-skill:latest .
+          docker save alexa-gemini-skill:latest > image.tar
+      
+      - name: Create deployment info
+        run: |
+          cat > DEPLOYED.md << 'EOF'
+          # Alexa Gemini Skill - Deployment Info
+          
+          **Build Time**: $(date)
+          **Commit**: ${{ github.sha }}
+          **Branch**: ${{ github.ref }}
+          
+          ## Docker Image Ready
+          ```bash
+          docker load < image.tar
+          docker run -d -e GEMINI_API_KEY=AIzaSyD1pDSUfT9K5IDcxXTUse4sKe5Rl5_8xo -p 3000:3000 alexa-gemini-skill:latest
+          ```
+          
+          ## Next Steps
+          1. Run the Docker image locally
+          2. Use ngrok to expose: `ngrok http 3000`
+          3. Update Alexa endpoint with ngrok URL
+          4. Test with Alexa device
+          
+          **Status**: ✅ Ready for deployment
+          EOF
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build verification
+        run: npm list
+      
+      - name: Log deployment success
+        run: |
+          echo "✅ Alexa Gemini Skill is ready!"
+          echo "🐳 Docker image built successfully"
+          echo "📦 All dependencies installed"
+          echo ""
+          echo "To run locally:"
+          echo "  ./deploy.sh"
+          echo ""
+          echo "To expose:"
+          echo "  ngrok http 3000"
+          echo ""
+          echo "Skill ID: amzn1.ask.skill.218329d1-ef32-4e0a-a3ee-33513895c098"
+          echo "Endpoint: Ready to be configured"
